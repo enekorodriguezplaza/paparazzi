@@ -151,7 +151,7 @@ void orange_avoider_guided_periodic(void)
     case SAFE:
       if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
         navigation_state = OUT_OF_BOUNDS;		//OUT_OF_BOUNDS
-      } else if (obstacle_free_confidence == 0){
+      } else if (obstacle_free_confidence == 0){	//OG: 0
         navigation_state = OBSTACLE_FOUND;		//OBSTACLE_FOUND
       } else {
         guidance_h_set_guided_body_vel(speed_sp, 0);   	//SAFE: continue, nothing happens
@@ -160,31 +160,35 @@ void orange_avoider_guided_periodic(void)
       break;
     case OBSTACLE_FOUND:
       // stop
-      guidance_h_set_guided_body_vel(0, 0);		//gives zero velocity
-      // randomly select new search direction
+      //guidance_h_set_guided_body_vel(0, 0);		//gives zero velocity
+      guidance_h_set_guided_body_vel(0.1f*speed_sp, 0); //instead of zero, it slows down
+      // randomly select new search direction. We need to change it so that it is not random
       chooseRandomIncrementAvoidance2();
-
       navigation_state = SEARCH_FOR_SAFE_HEADING;
 
       break;
-    case SEARCH_FOR_SAFE_HEADING: //after chooseRandomIncrement, we know in what direction to rotate, now we rotate
-      guidance_h_set_guided_heading_rate(avoidance_heading_direction * oag_heading_rate);
+    case SEARCH_FOR_SAFE_HEADING: 
+    	//guidance_h_set_guided_heading_rate(avoidance_heading_direction * oag_heading_rate);  
+	guidance_h_nav_new((avoidance_heading_direction * oag_heading_rate), 0.1f*speed_sp, 0); 
 
-      // make sure we have a couple of good readings before declaring the way safe (this is a loop until we got the good readings)
-      if (obstacle_free_confidence >= 2){
+      // make sure we have a couple of good readings before declaring the way safe
+      if (obstacle_free_confidence >= 1){ //OG: 2
         guidance_h_set_guided_heading(stateGetNedToBodyEulers_f()->psi);
         navigation_state = SAFE;    //after we got a couple good readings, we are SAFE
       }
       break;
     case OUT_OF_BOUNDS:
-      // stop. This is very strict. I want this to happen one or two seconds after. In ComputerVision part, add a sleep() before giving me an OUT_OF_BOUNDS (in an inner loop pls otherwise all sleeps)
-      guidance_h_set_guided_body_vel(0, 0); 
+        guidance_h_set_guided_body_vel(0.35f*speed_sp, 0); //slow down
+        chooseRandomIncrementAvoidance(); //chose random change of direction
+        //guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(60));
+	guidance_h_nav_new((avoidance_heading_direction * oag_heading_rate*2.0f), 0.1f*speed_sp, 0);
+	navigation_state = REENTER_ARENA;
+
       // start turn back into arena
-      guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(60)); //original: 15
+      //guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(60)); //original: 15
+  
+      //navigation_state = REENTER_ARENA;
 
-      navigation_state = REENTER_ARENA;
-
-      break;
     case REENTER_ARENA:
       // force floor center to opposite side of turn to head back into arena
       if (floor_count >= floor_count_threshold && avoidance_heading_direction * floor_centroid_frac >= 0.f){
