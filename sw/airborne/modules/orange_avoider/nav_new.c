@@ -32,6 +32,7 @@
 #include "subsystems/abi.h"
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h> 	//to use sleep()
 
 #define ORANGE_AVOIDER_VERBOSE TRUE
 
@@ -43,10 +44,13 @@
 #endif
 
 uint8_t chooseRandomIncrementAvoidance(void);
+uint8_t chooseRandomIncrementAvoidance2(void);
 
 enum navigation_state_t {
   SAFE,
   OBSTACLE_FOUND,
+  OBSTACLE_FOUND_L,
+  OBSTACLE_FOUND_R,
   SEARCH_FOR_SAFE_HEADING,
   OUT_OF_BOUNDS,
   REENTER_ARENA
@@ -56,7 +60,7 @@ enum navigation_state_t {
 float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
 float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
 float oag_max_speed = 0.5f;               // max flight speed [m/s]
-float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
+float oag_heading_rate = RadOfDeg(30.f);  // heading change setpoint for avoidance [rad/s], so X degrees per second? OG: 20
 
 // define and initialise global variables
 enum navigation_state_t navigation_state = SEARCH_FOR_SAFE_HEADING;   // current state in state machine
@@ -141,44 +145,42 @@ void orange_avoider_guided_periodic(void)
   // bound obstacle_free_confidence
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
-  float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
+  float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence); //implement this in ours too
 
   switch (navigation_state){
     case SAFE:
       if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
-        navigation_state = OUT_OF_BOUNDS;
+        navigation_state = OUT_OF_BOUNDS;		//OUT_OF_BOUNDS
       } else if (obstacle_free_confidence == 0){
-        navigation_state = OBSTACLE_FOUND;
+        navigation_state = OBSTACLE_FOUND;		//OBSTACLE_FOUND
       } else {
-        guidance_h_set_guided_body_vel(speed_sp, 0);
+        guidance_h_set_guided_body_vel(speed_sp, 0);   	//SAFE: continue, nothing happens
       }
 
       break;
     case OBSTACLE_FOUND:
       // stop
-      guidance_h_set_guided_body_vel(0, 0);
-
+      guidance_h_set_guided_body_vel(0, 0);		//gives zero velocity
       // randomly select new search direction
-      chooseRandomIncrementAvoidance();
+      chooseRandomIncrementAvoidance2();
 
       navigation_state = SEARCH_FOR_SAFE_HEADING;
 
       break;
-    case SEARCH_FOR_SAFE_HEADING:
+    case SEARCH_FOR_SAFE_HEADING: //after chooseRandomIncrement, we know in what direction to rotate, now we rotate
       guidance_h_set_guided_heading_rate(avoidance_heading_direction * oag_heading_rate);
 
-      // make sure we have a couple of good readings before declaring the way safe
+      // make sure we have a couple of good readings before declaring the way safe (this is a loop until we got the good readings)
       if (obstacle_free_confidence >= 2){
         guidance_h_set_guided_heading(stateGetNedToBodyEulers_f()->psi);
-        navigation_state = SAFE;
+        navigation_state = SAFE;    //after we got a couple good readings, we are SAFE
       }
       break;
     case OUT_OF_BOUNDS:
-      // stop
-      guidance_h_set_guided_body_vel(0, 0);
-
+      // stop. This is very strict. I want this to happen one or two seconds after. In ComputerVision part, add a sleep() before giving me an OUT_OF_BOUNDS (in an inner loop pls otherwise all sleeps)
+      guidance_h_set_guided_body_vel(0, 0); 
       // start turn back into arena
-      guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(15));
+      guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(60)); //original: 15
 
       navigation_state = REENTER_ARENA;
 
@@ -215,5 +217,24 @@ uint8_t chooseRandomIncrementAvoidance(void)
     avoidance_heading_direction = -1.f;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
   }
+  return false;
+}
+
+uint8_t chooseRandomIncrementAvoidance2(void) //don't want this one to be random
+{
+  // Randomly choose CW or CCW avoiding direction
+  if (rand() % 2 == 0) { //randomly chooses whether obstacle is L/R, to be changed by pixel count
+    navigation_state = OBSTACLE_FOUND_L;   //many bad pixels on left side
+  } else {
+    navigation_state = OBSTACLE_FOUND_R;   //else, bad pixels on the right side
+  }
+  if (navigation_state == OBSTACLE_FOUND_L) { 
+    avoidance_heading_direction = 1.f; 	   // if obstacle on left, turn right
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate); //this is only a print, the real thing is in SEARCH_FOR_NEW_HEADING
+  } else{
+    avoidance_heading_direction = -1.f;    // if obstacle on the right, turn left
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+  }
+  
   return false;
 }
