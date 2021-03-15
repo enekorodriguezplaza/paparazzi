@@ -136,7 +136,7 @@ void orange_avoider_guided_periodic(void)
   VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
 
   // update our safe confidence using color threshold
-  if(color_count < color_count_threshold){
+  if(color_count < color_count_threshold){ // TO BE REPLACED WITH OUR LOGIC
     obstacle_free_confidence++;
   } else {
     obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
@@ -145,9 +145,9 @@ void orange_avoider_guided_periodic(void)
   // bound obstacle_free_confidence
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
-  float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence); //implement this in ours too
+  float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence); // IMPLEMENT THIS IN OURS
 
-  switch (navigation_state){
+  switch (navigation_state){ // TO BE REPLACED WITH OUR LOGIC
     case SAFE:
       if (floor_count < floor_count_threshold || fabsf(floor_centroid_frac) > 0.12){
         navigation_state = OUT_OF_BOUNDS;		//OUT_OF_BOUNDS
@@ -158,7 +158,7 @@ void orange_avoider_guided_periodic(void)
       }
 
       break;
-    case OBSTACLE_FOUND:
+    case OBSTACLE_FOUND:  //NOT REALLY CHANGE
       // stop
       //guidance_h_set_guided_body_vel(0, 0);		//gives zero velocity
       guidance_h_set_guided_body_vel(0.1f*speed_sp, 0); //instead of zero, it slows down
@@ -177,11 +177,11 @@ void orange_avoider_guided_periodic(void)
         navigation_state = SAFE;    //after we got a couple good readings, we are SAFE
       }
       break;
-    case OUT_OF_BOUNDS:
+    case OUT_OF_BOUNDS: 
         guidance_h_set_guided_body_vel(0.35f*speed_sp, 0); //slow down
         chooseRandomIncrementAvoidance(); //chose random change of direction
         //guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(60));
-	guidance_h_nav_new((avoidance_heading_direction * oag_heading_rate*2.0f), 0.1f*speed_sp, 0);
+	guidance_h_nav_new((avoidance_heading_direction * oag_heading_rate*2.0f), 0.15f*speed_sp, 0);
 	navigation_state = REENTER_ARENA;
 
       // start turn back into arena
@@ -189,7 +189,7 @@ void orange_avoider_guided_periodic(void)
   
       //navigation_state = REENTER_ARENA;
 
-    case REENTER_ARENA:
+    case REENTER_ARENA: //CENTROID WILL HAVE TO BE REPLACED WITH OUR LOGIC SOMEHOW
       // force floor center to opposite side of turn to head back into arena
       if (floor_count >= floor_count_threshold && avoidance_heading_direction * floor_centroid_frac >= 0.f){
         // return to heading mode
