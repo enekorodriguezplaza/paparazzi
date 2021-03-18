@@ -165,6 +165,15 @@ extern bool guidance_h_set_guided_heading_rate(float rate);
  * @param none.
  * @return Pointer to a structure containing x and y position errors
  */
+
+extern bool guidance_h_nav_new(float rate, float vx, float vy);
+
+/** New function for navigation
+ * @param none.
+ * @return 
+ */
+
+
 extern const struct Int32Vect2 *guidance_h_get_pos_err(void);
 
 /* Make sure that ref can only be temporarily disabled for testing,

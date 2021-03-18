@@ -728,13 +728,15 @@ bool guidance_h_set_guided_heading(float heading)
   return false;
 }
 
-bool guidance_h_set_guided_body_vel(float vx, float vy)
+
+bool guidance_h_set_guided_body_vel(float vx, float vy)  
 {
   float psi = stateGetNedToBodyEulers_f()->psi;
   float newvx =  cosf(-psi) * vx + sinf(-psi) * vy;
   float newvy = -sinf(-psi) * vx + cosf(-psi) * vy;
   return guidance_h_set_guided_vel(newvx, newvy);
 }
+
 
 bool guidance_h_set_guided_vel(float vx, float vy)
 {
@@ -757,6 +759,21 @@ bool guidance_h_set_guided_heading_rate(float rate)
   return false;
 }
 
+bool guidance_h_nav_new(float rate, float vx, float vy)
+{
+  if (guidance_h.mode == GUIDANCE_H_MODE_GUIDED) {
+    SetBit(guidance_h.sp.mask, 7);
+    guidance_h.sp.heading_rate = rate;
+    float psi = stateGetNedToBodyEulers_f()->psi;
+    float newvx =  cosf(-psi) * vx + sinf(-psi) * vy;
+    float newvy = -sinf(-psi) * vx + cosf(-psi) * vy;
+    SetBit(guidance_h.sp.mask, 5);
+    guidance_h.sp.speed.x = SPEED_BFP_OF_REAL(newvx);
+    guidance_h.sp.speed.y = SPEED_BFP_OF_REAL(newvy);
+    return true;
+  }
+  return false;
+}
 const struct Int32Vect2 *guidance_h_get_pos_err(void)
 {
   return &guidance_h_pos_err;
