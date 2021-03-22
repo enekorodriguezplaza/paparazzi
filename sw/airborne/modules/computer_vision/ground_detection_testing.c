@@ -17,6 +17,8 @@
 #define FPS_WIDTH 0
 #endif
 
+//This one is for the git boys
+
 //These are initialised as zero but using the image_width_printer_init they are changed to the
 //proper settings for a green filter
 uint8_t lum_min = 0;
