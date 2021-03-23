@@ -28,6 +28,8 @@
 #endif
 
 volatile int go_no_go;
+volatile int left_or_right;
+volatile double confidence_level;
 
 uint8_t chooseRandomIncrementAvoidance(void);
 //uint8_t chooseRandomIncrementAvoidance2(void); //in case we have L/R

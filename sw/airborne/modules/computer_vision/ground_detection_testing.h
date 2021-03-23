@@ -13,6 +13,8 @@
 extern void image_width_printer_init(void);
 extern volatile int go_no_go; /*create a volatile integer to be read by navigation. 1 means it is okay to go straight, 0 means
                         it is not*/
+extern volatile int left_or_right; //volatile value that is negative for more obstacle on left and positive on the right
+extern volatile double confidence_level; //volatile double between 0-1 that states how clear path straight ahead is
 //We want to be able to change the size of the rectangle, therefore we have to define them here such that they are
 //linked with the XML
 
