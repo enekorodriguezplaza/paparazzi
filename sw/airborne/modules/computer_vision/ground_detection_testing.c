@@ -128,13 +128,19 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
     //initialise only_green_in_row which will be 1 if a row has no green and 0 otherwise
     int only_green_in_row;
 
+    //initialise left_or_right to 0
+    left_or_right = 0;
 
-    int prev_left_right; //This stores the score of the previous iteration of left_or_right
+    //initialise prev_left_right:
+    int prev_left_right;
 
     //Go through rectangles starting from smallest (most to the right)
     for (int rect_num = 0; rect_num < num_rect; rect_num++) {
+        //This makes sure that we can use the last checked rectangle, with an obstacle, to see if
+        //that obstacle is left or right. It contains the left_or_right score of the previous rectangle
+        prev_left_right = left_or_right;
 
-        left_or_right = 0; //The "score" if an obstacle is left or right is initialised as 0
+        left_or_right = 0; //The "score" if an obstacle is left or right is reset to 0 for each new rectangle
 
         //initialise only_green_in_row which will be 1 if a row has no green
         only_green_in_row = 1;
@@ -146,6 +152,7 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
         int num_squares = ceil(rect_length/LENGTH_SQUARE);
 
         //printf("We are considering %d squares\n", num_squares);
+        printf("We are considering the rectangle at row %d and column %d of length %d",(int)(0.5*(rows - rect_length)), (int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num), rect_length);
 
         for (int square_num = 0; square_num < num_squares; square_num++) {
 
@@ -155,9 +162,6 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
             int right_corner_row = 0.5*(rows - rect_length) + LENGTH_SQUARE*square_num;
             int right_corner_column = TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num;
 
-            //go_no_go = check_for_green(img, right_corner_row, right_corner_column, rect_length);
-            //printf("Rectangle at (%d,%d) of length (%d) is a %d \n", right_corner_column, right_corner_row, rect_length,go_no_go);
-
             //printf("The modulo is equal to %d \n", square_num%SQUARES_CHECKED);
 
             if (square_num%SQUARES_CHECKED == 0){
@@ -166,6 +170,8 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
                 //printf("square number %d at row %d and column %d is being checked \n", square_num, right_corner_row, right_corner_column);
                 if (check_for_green(img, right_corner_row, right_corner_column, LENGTH_SQUARE) == 0) {
                     //printf("Rectangle at (%d,%d) of length (%d) is a go \n", right_corner_column, right_corner_row, rect_length);
+                    //printf("We are considering the rectangle at column %d and row %d of length (%d)",right_corner_column, right_corner_row, rect_length);
+                    //printf("square number %d at row %d and column %d has been found to contain no green \n", square_num, right_corner_row, right_corner_column);
 
                     //Since green has been detected set only_green_in_row to 0
                     only_green_in_row = 0;
@@ -178,10 +184,12 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
                     //if square is to the left of the center of the image subtract 1 from left_or_right
                     if (right_corner_row+0.5*LENGTH_SQUARE < 0.5*rows){
                         left_or_right--; //For objects on the left
+                        printf("The square on the LEFT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                     }
                     //else add 1 to left_or_right
                     else{
                         //printf("waddup \n");
+                        printf("The square on the RIGHT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                         left_or_right++; //For objects on the right
                     }
 
@@ -191,12 +199,14 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
             }
         } //End of square for loop
 
+        printf("--------------------END OF RECTANGLE--------------------\n");
+
         //if a rectangle has only green
         if (only_green_in_row == 1) {
             //
             //printf("This is rectangle number %d it starts at row %d and column %d and has length of %d\n", rect_num,(int)(0.5 * (rows - rect_length)),(int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num),rect_length);
-            printf("We have a GO and the final row with an obstacle has a left_right score of: %d \n", prev_left_right);
             left_or_right = prev_left_right;
+            printf("We have a GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
             //set confidence level to decrease the closer the only green rectangle to the drone
             confidence_level = (double)(num_rect-rect_num)/num_rect;
             //printf("Rectangle number %d, of %d was found to be all green \n", rect_num, num_rect);
@@ -206,17 +216,15 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
 
 
         }
-        //This makes sure that we can use the last checked rectangle, with an obstacle, to see if
-        //that obstacle is left or right
-        prev_left_right = left_or_right;
+
         //printf("We have a NO GO, this is rectangle number %d it starts at row %d and column %d and has length of %d\n", rect_num,(int)(0.5 * (rows - rect_length)),(int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num),rect_length);
 
 
 
 
     } //End of rectangle for loop
-
-    printf("We have a NO GO and the final row with an obstacle has a left_right score of: %d \n", prev_left_right);
+    left_or_right = prev_left_right
+    printf("We have a NO GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right;
     confidence_level = 0.0;
     go_no_go = 0;
     return img;
