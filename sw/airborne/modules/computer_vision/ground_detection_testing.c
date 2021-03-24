@@ -43,17 +43,14 @@ double BOTTOM_LENGTH_PERCENTAGE = 0.5;
 //Length of the rectangle most to the right as percentage of image length (height)
 double TOP_LENGTH_PERCENTAGE = 0.25;
 //How far to the left the rectangles start as a percentage of image width
-//TODO: add to dlsettings
 double BOTTOM_WIDTH_PERCENTAGE = 0;
 //How far to the left the rectangles extend as a percentage of image width
 double TOP_WIDTH_PERCENTAGE = 0.75;
 //#width in pixels of each rectangle
 int WIDTH_RECT = 5;
 //length of each square (the squares are the rectangles in each column. They do not have to be squares)
-//TODO: add to dlsettings
 int LENGTH_SQUARE = 5;
 //Every SQUARES_CHECKEDth square is checked for greer
-//TODO: add to dl settings
 int SQUARES_CHECKED = 2;
 
 int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column, int rect_length) {
@@ -90,29 +87,17 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
                 (*up >= cb_min) && (*up <= cb_max) &&
                 (*vp >= cr_min) && (*vp <= cr_max)) ){
 
-                //printf("the pixel at row %d and column %d is NOT green!!!!!!!\n", y, x);
                 return 0;
             }
 
-            //printf("SAFE @ row %d and column %d\n",y,x);
-
-            //tot_x += x;
-            //tot_y += y;
-            //if (draw){
-            //*yp = 255;  // make pixel brighter in image
-            //}
         }
         }
-    /*else{
-
-        printf("NOT SAFE @ row %d and column %d\n",y,x);
-    }*/
     return 1;
 
 }
 
 struct image_t *get_rect(struct image_t *img){ //In this function we want to look at the amount of green pixels in a given rectangle
-    //printf("Working \n");
+
 
     int rows = img->h;
     int columns = img->w;
@@ -151,27 +136,19 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
         //This is the number of squares in each row
         int num_squares = ceil(rect_length/LENGTH_SQUARE);
 
-        //printf("We are considering %d squares\n", num_squares);
-        //printf("We are considering the rectangle at row %d and column %d of length %d",(int)(0.5*(rows - rect_length)), (int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num), rect_length);
 
         for (int square_num = 0; square_num < num_squares; square_num++) {
-
-            //printf("This is square %d out of %d\n", square_num, num_squares);
 
             //Coordinates of right corner
             int right_corner_row = 0.5*(rows - rect_length) + LENGTH_SQUARE*square_num;
             int right_corner_column = TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num;
 
-            //printf("The modulo is equal to %d \n", square_num%SQUARES_CHECKED);
 
             if (square_num%SQUARES_CHECKED == 0){
                 //TODO: add else to add point to left right score if square comes back as not green
                 //Check if this rectangle is completely green and if so we are good to go straight ahead
-                //printf("square number %d at row %d and column %d is being checked \n", square_num, right_corner_row, right_corner_column);
+
                 if (check_for_green(img, right_corner_row, right_corner_column, LENGTH_SQUARE) == 0) {
-                    //printf("Rectangle at (%d,%d) of length (%d) is a go \n", right_corner_column, right_corner_row, rect_length);
-                    //printf("We are considering the rectangle at column %d and row %d of length (%d)",right_corner_column, right_corner_row, rect_length);
-                    //printf("square number %d at row %d and column %d has been found to contain no green \n", square_num, right_corner_row, right_corner_column);
 
                     //Since green has been detected set only_green_in_row to 0
                     only_green_in_row = 0;
@@ -180,58 +157,44 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
 
                     /*TODO: Check if having a left_or_right variable that constantly changes has any
                      * effect on the performance of the code and if so add a final_left_or_right variable */
-                    //printf("The square is at %d and the mid point at %d \n", (int)(right_corner_row+0.5*LENGTH_SQUARE),(int)(0.5*rows));
                     //if square is to the left of the center of the image subtract 1 from left_or_right
                     if (right_corner_row+0.5*LENGTH_SQUARE < 0.5*rows){
                         left_or_right--; //For objects on the left
-                        //printf("The square on the LEFT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                     }
                     //else add 1 to left_or_right
                     else{
-                        //printf("waddup \n");
-                        //printf("The square on the RIGHT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                         left_or_right++; //For objects on the right
                     }
 
-                    //printf("The left_or_right score is %d \n", left_or_right);
-                    //printf("The length of this rectangle is %d  and it is rectangle number %d\n", rect_length, rect_num);
                 }
             }
         } //End of square for loop
 
-        //printf("--------------------END OF RECTANGLE--------------------\n");
 
         //if a rectangle has only green
         if (only_green_in_row == 1) {
-            //
-            //printf("This is rectangle number %d it starts at row %d and column %d and has length of %d\n", rect_num,(int)(0.5 * (rows - rect_length)),(int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num),rect_length);
             left_or_right = prev_left_right;
-            //printf("We have a GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
+
             //set confidence level to decrease the closer the only green rectangle to the drone
             confidence_level = (double)(num_rect-rect_num)/num_rect;
-            //printf("The confidence level is %lf", confidence_level)
-            //printf("Rectangle number %d, of %d was found to be all green \n", rect_num, num_rect);
             go_no_go = 1;
-            //printf("We are good to go with a confidence level of %lf \n",confidence_level);
             return img;
 
 
         }
-
-        //printf("We have a NO GO, this is rectangle number %d it starts at row %d and column %d and has length of %d\n", rect_num,(int)(0.5 * (rows - rect_length)),(int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num),rect_length);
 
 
 
 
     } //End of rectangle for loop
     left_or_right = prev_left_right;
-    //printf("We have a NO GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
+
     confidence_level = 0.0;
     go_no_go = 0;
     return img;
 
     //go_no_go = check_for_green(img,PERCENT_WIDTH_RECT_1,PERCENT_HEIGHT_RECT_1);
-    //printf("To go or not to go: %d \n",go_no_go);
+
 }
 
 void image_width_printer_init(void) {
