@@ -43,7 +43,7 @@ double BOTTOM_LENGTH_PERCENTAGE = 0.5;
 //Length of the rectangle most to the right as percentage of image length (height)
 double TOP_LENGTH_PERCENTAGE = 0.25;
 //How far to the left the rectangles start as a percentage of image width
-double BOTTOM_WIDTH_PERCENTAGE = 0;
+double BOTTOM_WIDTH_PERCENTAGE = 0.13;
 //How far to the left the rectangles extend as a percentage of image width
 double TOP_WIDTH_PERCENTAGE = 0.75;
 //#width in pixels of each rectangle

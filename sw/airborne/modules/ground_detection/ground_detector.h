@@ -11,7 +11,8 @@ extern float GD_MAX_SPEED;
 extern float GD_HEADING_RATE;
 extern float GD_SLOW_FACTOR_FOUND;
 extern float GD_SLOW_FACTOR_SEARCH;
-
+extern float CONFIDENCE_FACTOR;
+extern int RIGHT_THRESHOLD;
 
 extern void get_signal_init(void);
 extern void get_signal_periodic(void);
