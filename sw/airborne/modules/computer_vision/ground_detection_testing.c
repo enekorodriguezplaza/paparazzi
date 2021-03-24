@@ -152,7 +152,7 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
         int num_squares = ceil(rect_length/LENGTH_SQUARE);
 
         //printf("We are considering %d squares\n", num_squares);
-        printf("We are considering the rectangle at row %d and column %d of length %d",(int)(0.5*(rows - rect_length)), (int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num), rect_length);
+        //printf("We are considering the rectangle at row %d and column %d of length %d",(int)(0.5*(rows - rect_length)), (int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num), rect_length);
 
         for (int square_num = 0; square_num < num_squares; square_num++) {
 
@@ -184,12 +184,12 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
                     //if square is to the left of the center of the image subtract 1 from left_or_right
                     if (right_corner_row+0.5*LENGTH_SQUARE < 0.5*rows){
                         left_or_right--; //For objects on the left
-                        printf("The square on the LEFT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
+                        //printf("The square on the LEFT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                     }
                     //else add 1 to left_or_right
                     else{
                         //printf("waddup \n");
-                        printf("The square on the RIGHT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
+                        //printf("The square on the RIGHT at row %d and column %d has been found to contain non green \n",right_corner_row, right_corner_column);
                         left_or_right++; //For objects on the right
                     }
 
@@ -199,16 +199,17 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
             }
         } //End of square for loop
 
-        printf("--------------------END OF RECTANGLE--------------------\n");
+        //printf("--------------------END OF RECTANGLE--------------------\n");
 
         //if a rectangle has only green
         if (only_green_in_row == 1) {
             //
             //printf("This is rectangle number %d it starts at row %d and column %d and has length of %d\n", rect_num,(int)(0.5 * (rows - rect_length)),(int)(TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num),rect_length);
             left_or_right = prev_left_right;
-            printf("We have a GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
+            //printf("We have a GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
             //set confidence level to decrease the closer the only green rectangle to the drone
             confidence_level = (double)(num_rect-rect_num)/num_rect;
+            //printf("The confidence level is %lf", confidence_level)
             //printf("Rectangle number %d, of %d was found to be all green \n", rect_num, num_rect);
             go_no_go = 1;
             //printf("We are good to go with a confidence level of %lf \n",confidence_level);
@@ -223,8 +224,8 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
 
 
     } //End of rectangle for loop
-    left_or_right = prev_left_right
-    printf("We have a NO GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right;
+    left_or_right = prev_left_right;
+    //printf("We have a NO GO and the final row with an obstacle has a left_right score of: %d \n", left_or_right);
     confidence_level = 0.0;
     go_no_go = 0;
     return img;

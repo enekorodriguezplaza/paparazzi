@@ -67,6 +67,7 @@ void get_signal_periodic(void){
 
     VERBOSE_PRINT("%d \n", go_no_go); /*This prints the go_no_go variable in paparazzi. This variable is 1 if the drone
                                         can fly straight ahead and 0 otherwise*/
+    VERBOSE_PRINT("The confidence level is %lf and the left_or_right score is %d", confidence_level, left_or_right);
     //if (go_no_go ==1){
         //navigation_state = SAFE;
     //}else navigation_state = OBSTACLE_FOUND;
