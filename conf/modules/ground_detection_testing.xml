@@ -31,6 +31,10 @@
                 <dl_setting var="cr_min" min="0" step = "1" max="255" shortname="V_lb"/>
                 <dl_setting var="cr_max" min="0" step = "1" max="255" shortname="V_ub"/>
             </dl_settings>
+
+            <dl_settings name="Initialise_Green">
+                <dl_setting var="INITIALISE_GREEN" min="0" step="1" max="1"/>
+            </dl_settings>
         </dl_settings>
     </settings>
 

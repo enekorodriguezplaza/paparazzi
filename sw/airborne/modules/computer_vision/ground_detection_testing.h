@@ -25,6 +25,8 @@ extern uint8_t cb_max;
 extern uint8_t cr_min;
 extern uint8_t cr_max;
 
+extern int INITIALISE_GREEN;
+
 extern double BOTTOM_LENGTH_PERCENTAGE;
 extern double TOP_LENGTH_PERCENTAGE;
 extern double TOP_WIDTH_PERCENTAGE;

@@ -37,6 +37,8 @@ volatile int left_or_right;
 //double <1 that is higher the clearer the drones path is
 volatile double confidence_level;
 
+int INITIALISE_GREEN = 0;
+
 //Remember image is rotated. Width is longer of the two dimensions
 //Length of the rectangle most to the left as percentage of image length (height)
 double BOTTOM_LENGTH_PERCENTAGE = 0.5;
@@ -46,29 +48,34 @@ double TOP_LENGTH_PERCENTAGE = 0.25;
 double BOTTOM_WIDTH_PERCENTAGE = 0.13;
 //How far to the left the rectangles extend as a percentage of image width
 double TOP_WIDTH_PERCENTAGE = 0.75;
-//#width in pixels of each rectangle
+//Width in pixels of each rectangle
 int WIDTH_RECT = 5;
 //length of each square (the squares are the rectangles in each column. They do not have to be squares)
 int LENGTH_SQUARE = 5;
 //Every SQUARES_CHECKEDth square is checked for greer
 int SQUARES_CHECKED = 2;
 
-int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column, int rect_length) {
+
+int green_initialised = 0;
+
+int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column) {
     //printf("Working\n");
 
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
-    //Go trough the pixels in the rectangle
-    //TODO: Check squares within the rectangles to know if the object is on the left or on the right
+    double tot_lum;
+    double tot_cb;
+    double tot_cr;
 
-    for (uint16_t y = right_corner_row;y <= right_corner_row + rect_length ; y++){
+    //Go through the pixels in the rectangle
+    for (uint16_t y = right_corner_row;y < right_corner_row + LENGTH_SQUARE; y++) {
         //This now goes trough a certain percentage pf the image
         //for (uint16_t x = (1-percent_w)*0.5* img->w; x < (1-((1-percent_w)*0.5))* img->w; x ++)
-        for (uint16_t x = right_corner_column ; x >= right_corner_column - WIDTH_RECT; x--) {
+        for (uint16_t x = right_corner_column; x > right_corner_column - WIDTH_RECT; x--) {
             // Check if the color is inside the specified values
             uint8_t *yp, *up, *vp;
-            
+
             if (x % 2 == 0) {
                 // Even x
                 up = &buffer[y * 2 * img->w + 2 * x];      // U
@@ -82,27 +89,122 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
                 vp = &buffer[y * 2 * img->w + 2 * x];      // V
                 yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
             }
-            if (x<img->w){
-                printf("The coordinates are row %d and column %d \n",y,x);
-                printf("The colour is y: %d u: %d and v: %d \n", *yp, *up, *vp);
-            }
-            if (!((*yp >= lum_min) && (*yp <= lum_max) &&
-                (*up >= cb_min) && (*up <= cb_max) &&
-                (*vp >= cr_min) && (*vp <= cr_max)) ){
-                return 0;
-            }
-            else{
-                *yp = 255;  // make pixel brighter in image
-            }
 
+            tot_lum += *yp;
+            tot_cb += *up;
+            tot_cr += *vp;
         }
-        }
+    }
+
+    //printf("tot_v is %lf",tot_cr);
+
+    double avg_lum = tot_lum/(LENGTH_SQUARE*WIDTH_RECT);
+    double avg_cb = tot_cb/(LENGTH_SQUARE*WIDTH_RECT);
+    double avg_cr = tot_cr/(LENGTH_SQUARE*WIDTH_RECT);
+
+    //printf("average y, u and v values are: %lf, %lf, %lf\n", avg_lum, avg_cb, avg_cr);
+
+    if (!((avg_lum >= lum_min) && (avg_lum <= lum_max) &&
+        (avg_cb >= cb_min) && (avg_cb <= cb_max) &&
+        (avg_cr>= cr_min) && (avg_cr <= cr_max)) ){
+
+        uint8_t *yp;
+        yp = &buffer[right_corner_row * 2 * img->w + 2 * right_corner_column + 1];
+        *yp = 255;  // make pixel brighter in image
+        return 0;
+    }
+    /*else{
+        *yp = 255;  // make pixel brighter in image
+    }
+    */
     return 1;
 
 }
 
+void init_green(struct image_t *img) {
+    //pointer to buffer where image is stored
+    uint8_t *buffer = img->buf;
+
+    float lum_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    float cb_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    float cr_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+
+    int counter = 0;
+
+    for (uint16_t y = floor((0.25*img->w)); y < floor((0.75*img->w)); y++) {
+        for (uint16_t x = 0; x > floor((0.25*img->h)); x++) {
+
+            uint8_t *yp, *up, *vp;
+            if (x % 2 == 0) {
+                // Even x
+                up = &buffer[y * 2 * img->w + 2 * x];      // U
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+                vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+                //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+            } else {
+                // Uneven x
+                up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+                //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
+                vp = &buffer[y * 2 * img->w + 2 * x];      // V
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+            }
+
+            lum_values[counter] = *yp;
+            cb_values[counter] = *up;
+            cr_values[counter] = *vp;
+
+            counter++;
+        }
+    }
+    float lum_sum = 0.0;
+    float lum_mean;
+    float lum_std_dev = 0.0;
+
+    float cb_sum = 0.0;
+    float cb_mean;
+    float cb_std_dev = 0.0;
+
+    float cr_sum = 0.0;
+    float cr_mean;
+    float cr_std_dev = 0.0;
+
+    for (int i = 0; i<counter; i++){
+        lum_sum += lum_values[i];
+        cb_sum += cb_values[i];
+        cr_sum += cr_values[i];
+    }
+
+    lum_mean = lum_sum/counter;
+    cb_mean = cb_sum/counter;
+    cr_mean = cr_sum/counter;
+
+    for (int i = 0; i<counter; i++){
+        lum_std_dev += pow(lum_values[i]-lum_mean,2);
+        cb_std_dev += pow(cb_values[i]-cb_mean,2);
+        cr_std_dev += pow(cr_values[i]-cr_mean,2);
+    }
+
+    lum_std_dev = sqrt(lum_std_dev/counter);
+    cb_std_dev = sqrt(cb_std_dev/counter);
+    cr_std_dev = sqrt(cr_std_dev/counter);
+
+    lum_min = (int)(lum_mean-2.5*lum_std_dev);
+    lum_max = (int)(lum_mean+2.5*lum_std_dev);
+    cb_min  = (int)(cb_mean-3.5*cb_std_dev);
+    cb_max  = (int)(cb_mean+3.5*cb_std_dev);
+    cr_min  = (int)(cr_mean-3.5*cr_std_dev);
+    cr_max  = (int)(cr_mean+3.5*cr_std_dev);
+
+    return;
+}
+
 struct image_t *get_rect(struct image_t *img){ //In this function we want to look at the amount of green pixels in a given rectangle
 
+
+    if ((green_initialised == 0) && (INITIALISE_GREEN == 1)){
+        init_green(img);
+        green_initialised = 1;
+    }
 
     int rows = img->h;
     int columns = img->w;
@@ -153,7 +255,7 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
                 //TODO: add else to add point to left right score if square comes back as not green
                 //Check if this rectangle is completely green and if so we are good to go straight ahead
 
-                if (check_for_green(img, right_corner_row, right_corner_column, LENGTH_SQUARE) == 0) {
+                if (check_for_green(img, right_corner_row, right_corner_column) == 0) {
 
                     //Since green has been detected set only_green_in_row to 0
                     only_green_in_row = 0;

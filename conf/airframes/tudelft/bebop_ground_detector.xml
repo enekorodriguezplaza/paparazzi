@@ -10,12 +10,12 @@
             <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000/log"/>
 
             <!-- Detect green -->
-            <define name="GROUND_DETECTOR_LUM_MIN" value="60"/>
-            <define name="GROUND_DETECTOR_LUM_MAX" value="130"/>
-            <define name="GROUND_DETECTOR_CB_MIN" value="75"/>
-            <define name="GROUND_DETECTOR_CB_MAX" value="110"/>
+            <define name="GROUND_DETECTOR_LUM_MIN" value="118"/>
+            <define name="GROUND_DETECTOR_LUM_MAX" value="213"/>
+            <define name="GROUND_DETECTOR_CB_MIN" value="85"/>
+            <define name="GROUND_DETECTOR_CB_MAX" value="113"/>
             <define name="GROUND_DETECTOR_CR_MIN" value="120"/>
-            <define name="GROUND_DETECTOR_CR_MAX" value="140"/>
+            <define name="GROUND_DETECTOR_CR_MAX" value="148"/>
         </target>
 
         <target name="nps" board="pc">
