@@ -61,9 +61,9 @@ void get_signal_init(void){
 //Periodic function
 void get_signal_periodic(void){
 
-    VERBOSE_PRINT("%d \n", go_no_go); /*This prints the go_no_go variable in paparazzi. This variable is 1 if the drone
-                                        can fly straight ahead and 0 otherwise*/
-    VERBOSE_PRINT("The confidence level is %lf and the left_or_right score is %d", confidence_level, left_or_right);
+    //VERBOSE_PRINT("%d \n", go_no_go); /*This prints the go_no_go variable in paparazzi. This variable is 1 if the drone
+    //                                    can fly straight ahead and 0 otherwise*/
+    //VERBOSE_PRINT("The confidence level is %lf and the left_or_right score is %d", confidence_level, left_or_right);
 
     //Choose the minimum between the maximum bebop speed and what the bebop thinks is cautious. 
     float speed_sp = fminf(GD_MAX_SPEED, CONFIDENCE_FACTOR*(confidence_level+ 0.05)); //0.05 is added such that there is still a velocity, otherwise would just stop when confidence_level=0
@@ -107,11 +107,11 @@ uint8_t chooseDirection(void) //Chooses direction to rotate to
   if (left_or_right <= RIGHT_THRESHOLD ) { // left or right is negative (with bias): obstacle is on the left. A bias is added to go to the right more often
     
     avoidance_heading_direction = 1.f; 	   // if obstacle on the left, turn right
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * GD_HEADING_RATE); //this is only a print, the real thing is in SEARCH_FOR_NEW_HEADING
+    //VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * GD_HEADING_RATE); //this is only a print, the real thing is in SEARCH_FOR_NEW_HEADING
   
   } else {                                  // obstacle on the right
     avoidance_heading_direction = -1.f;    // if obstacle on the right, turn left
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * GD_HEADING_RATE);
+    //VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * GD_HEADING_RATE);
   } 
   return false;
 }

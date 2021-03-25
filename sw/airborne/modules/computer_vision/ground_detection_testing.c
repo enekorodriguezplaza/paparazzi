@@ -66,9 +66,9 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
         //This now goes trough a certain percentage pf the image
         //for (uint16_t x = (1-percent_w)*0.5* img->w; x < (1-((1-percent_w)*0.5))* img->w; x ++)
         for (uint16_t x = right_corner_column ; x >= right_corner_column - WIDTH_RECT; x--) {
-            //printf("The coordinates are row %d and column %d)\n",y,x);
             // Check if the color is inside the specified values
             uint8_t *yp, *up, *vp;
+            
             if (x % 2 == 0) {
                 // Even x
                 up = &buffer[y * 2 * img->w + 2 * x];      // U
@@ -82,12 +82,17 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
                 vp = &buffer[y * 2 * img->w + 2 * x];      // V
                 yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
             }
-
+            if (x<img->w){
+                printf("The coordinates are row %d and column %d \n",y,x);
+                printf("The colour is y: %d u: %d and v: %d \n", *yp, *up, *vp);
+            }
             if (!((*yp >= lum_min) && (*yp <= lum_max) &&
                 (*up >= cb_min) && (*up <= cb_max) &&
                 (*vp >= cr_min) && (*vp <= cr_max)) ){
-
                 return 0;
+            }
+            else{
+                *yp = 255;  // make pixel brighter in image
             }
 
         }
