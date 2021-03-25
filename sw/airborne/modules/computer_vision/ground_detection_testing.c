@@ -125,14 +125,14 @@ void init_green(struct image_t *img) {
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
-    float lum_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
-    float cb_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
-    float cr_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    int lum_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    int cb_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    int cr_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
 
     int counter = 0;
 
     for (uint16_t y = floor((0.25*img->w)); y < floor((0.75*img->w)); y++) {
-        for (uint16_t x = 0; x > floor((0.25*img->h)); x++) {
+        for (uint16_t x = 0; x < floor((0.25*img->h)); x++) {
 
             uint8_t *yp, *up, *vp;
             if (x % 2 == 0) {
@@ -153,18 +153,22 @@ void init_green(struct image_t *img) {
             cb_values[counter] = *up;
             cr_values[counter] = *vp;
 
+            printf("new value added to lum_values is %d \n", lum_values[counter]);
+            printf("new value added to cb_values is %d \n", cb_values[counter]);
+            printf("new value added to cr_values is %d \n", cr_values[counter]);
+
             counter++;
         }
     }
-    float lum_sum = 0.0;
+    int lum_sum = 0;
     float lum_mean;
     float lum_std_dev = 0.0;
 
-    float cb_sum = 0.0;
+    int cb_sum = 0;
     float cb_mean;
     float cb_std_dev = 0.0;
 
-    float cr_sum = 0.0;
+    int cr_sum = 0;
     float cr_mean;
     float cr_std_dev = 0.0;
 
@@ -195,11 +199,17 @@ void init_green(struct image_t *img) {
     cr_min  = (int)(cr_mean-3.5*cr_std_dev);
     cr_max  = (int)(cr_mean+3.5*cr_std_dev);
 
+    printf("lum_meanis %lf\n", lum_mean);
+    printf("lum_max is %d\n", lum_max);
+    printf("cb_mean is %lf \n", cb_mean);
+    printf("cb_max is %d \n", cb_max);
+    printf("cr_mean is %lf \n", cr_mean);
+    printf("cr_max is %d \n", cr_max);
+
     return;
 }
 
 struct image_t *get_rect(struct image_t *img){ //In this function we want to look at the amount of green pixels in a given rectangle
-
 
     if ((green_initialised == 0) && (INITIALISE_GREEN == 1)){
         init_green(img);
