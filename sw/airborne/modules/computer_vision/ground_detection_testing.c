@@ -153,9 +153,9 @@ void init_green(struct image_t *img) {
             cb_values[counter] = *up;
             cr_values[counter] = *vp;
 
-            printf("new value added to lum_values is %d \n", lum_values[counter]);
-            printf("new value added to cb_values is %d \n", cb_values[counter]);
-            printf("new value added to cr_values is %d \n", cr_values[counter]);
+            //printf("new value added to lum_values is %d \n", lum_values[counter]);
+            //printf("new value added to cb_values is %d \n", cb_values[counter]);
+            //printf("new value added to cr_values is %d \n", cr_values[counter]);
 
             counter++;
         }
