@@ -199,11 +199,11 @@ void init_green(struct image_t *img) {
     cr_min  = (int)(cr_mean-3.5*cr_std_dev);
     cr_max  = (int)(cr_mean+3.5*cr_std_dev);
 
-    printf("lum_meanis %lf\n", lum_mean);
+    printf("lum_min is %lf\n", lum_min);
     printf("lum_max is %d\n", lum_max);
-    printf("cb_mean is %lf \n", cb_mean);
+    printf("cb_min is %lf \n", cb_min);
     printf("cb_max is %d \n", cb_max);
-    printf("cr_mean is %lf \n", cr_mean);
+    printf("cr_min is %lf \n", cr_min);
     printf("cr_max is %d \n", cr_max);
 
     return;
