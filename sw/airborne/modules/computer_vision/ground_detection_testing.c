@@ -28,7 +28,6 @@ uint8_t cb_max  = 0;
 uint8_t cr_min  = 0;
 uint8_t cr_max  = 0;
 
-//TODO: make either boolean or integer with less bits
 volatile int go_no_go;
 
 //Integer that will be negative if obstacle on the right and negative if obstacle on the right
@@ -45,7 +44,7 @@ double BOTTOM_LENGTH_PERCENTAGE = 0.5;
 //Length of the rectangle most to the right as percentage of image length (height)
 double TOP_LENGTH_PERCENTAGE = 0.25;
 //How far to the left the rectangles start as a percentage of image width
-double BOTTOM_WIDTH_PERCENTAGE = 0.05;
+double BOTTOM_WIDTH_PERCENTAGE = 0.1;
 //How far to the left the rectangles extend as a percentage of image width
 double TOP_WIDTH_PERCENTAGE = 0.75;
 //Width in pixels of each rectangle
@@ -62,6 +61,13 @@ double bottom_green_length_percentage = 0.25;
 double top_green_length_percentage = 0.75;
 double bottom_green_width_percentage = 0.2;
 double top_green_width_percentage = 0.4;
+
+float lum_min_coeff = 5.5;
+float lum_max_coeff = 5.5;
+float cb_min_coeff  = 3.5;
+float cb_max_coeff  = 3.5;
+float cr_min_coeff  = 3.5;
+float cr_max_coeff = 3.5;
 
 int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column) {
     //printf("Working\n");
@@ -225,12 +231,12 @@ void init_green(struct image_t *img) {
     cb_std_dev = sqrt(cb_std_dev/counter);
     cr_std_dev = sqrt(cr_std_dev/counter);
 
-    lum_min = (int)(floor((lum_mean-2.5*lum_std_dev)));
-    lum_max = (int)(ceil((lum_mean+2.5*lum_std_dev)));
-    cb_min  = (int)(floor((cb_mean-3.5*cb_std_dev)));
-    cb_max  = (int)(ceil((cb_mean+3.5*cb_std_dev)));
-    cr_min  = (int)(floor((cr_mean-3.5*cr_std_dev)));
-    cr_max  = (int)(ceil((cr_mean+5*cr_std_dev)));
+    lum_min = (int)(floor((lum_mean-lum_min_coeff*lum_std_dev)));
+    lum_max = (int)(ceil((lum_mean+lum_max_coeff*lum_std_dev)));
+    cb_min  = (int)(floor((cb_mean-cb_min_coeff*cb_std_dev)));
+    cb_max  = (int)(ceil((cb_mean+cb_max_coeff*cb_std_dev)));
+    cr_min  = (int)(floor((cr_mean-cr_min_coeff*cr_std_dev)));
+    cr_max  = (int)(ceil((cr_mean+cr_max_coeff*cr_std_dev)));
 
     printf("lum_min (Y) is %d\n", lum_min);
     printf("lum_max (Y) is %d\n", lum_max);
@@ -247,7 +253,7 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
     if (green_initialised == 0){
         if (INITIALISE_GREEN == 0) {
 
-            printf("Please remove all obstacles from box and then set INITIALISE_GREEN to 1\n");
+            printf("Please make sure area highlighted in drone video stream is \n ONLY the grass of the CyberZoo and then set INITIALISE_GREEN to 1\n");
 
             uint8_t *buffer = img->buf;
 
@@ -324,7 +330,6 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
 
 
           if (square_num%SQUARES_CHECKED == 0){
-              //TODO: add else to add point to left right score if square comes back as not green
               //Check if this rectangle is completely green and if so we are good to go straight ahead
 
               if (check_for_green(img, right_corner_row, right_corner_column) == 0) {
@@ -332,10 +337,6 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
                   //Since green has been detected set only_green_in_row to 0
                   only_green_in_row = 0;
 
-                  //TODO:add more in depth weights depending on distance of square from center line
-
-                  /*TODO: Check if having a left_or_right variable that constantly changes has any
-                   * effect on the performance of the code and if so add a final_left_or_right variable */
                     //if square is to the left of the center of the image subtract 1 from left_or_right
                     if (right_corner_row+0.5*LENGTH_SQUARE < 0.5*rows){
                         left_or_right--; //For objects on the left
