@@ -104,6 +104,28 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
 
     //printf("average y, u and v values are: %lf, %lf, %lf\n", avg_lum, avg_cb, avg_cr);
 
+    /*for (uint16_t y = floor((0.25*img->h)); y < floor((0.75*img->h)); y++) {
+        for (uint16_t x = 0; x < floor((0.25 * img->w)); x++) {
+            uint8_t *yp, *up, *vp;
+            if (x % 2 == 0) {
+                // Even x
+                up = &buffer[y * 2 * img->w + 2 * x];      // U
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+                vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+                //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+            } else {
+                // Uneven x
+                up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+                //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
+                vp = &buffer[y * 2 * img->w + 2 * x];      // V
+                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+            }
+
+            *yp = 255;
+
+        }
+    }*/
+
     if (!((avg_lum >= lum_min) && (avg_lum <= lum_max) &&
         (avg_cb >= cb_min) && (avg_cb <= cb_max) &&
         (avg_cr>= cr_min) && (avg_cr <= cr_max)) ){
@@ -131,8 +153,8 @@ void init_green(struct image_t *img) {
 
     int counter = 0;
 
-    for (uint16_t y = floor((0.25*img->w)); y < floor((0.75*img->w)); y++) {
-        for (uint16_t x = 0; x < floor((0.25*img->h)); x++) {
+    for (uint16_t y = floor((0.25*img->h)); y < floor((0.75*img->h)); y++) {
+        for (uint16_t x = 0; x < floor((0.25*img->w)); x++) {
 
             uint8_t *yp, *up, *vp;
             if (x % 2 == 0) {
@@ -199,12 +221,12 @@ void init_green(struct image_t *img) {
     cr_min  = (int)(cr_mean-3.5*cr_std_dev);
     cr_max  = (int)(cr_mean+3.5*cr_std_dev);
 
-    printf("lum_min is %lf\n", lum_min);
-    printf("lum_max is %d\n", lum_max);
-    printf("cb_min is %lf \n", cb_min);
-    printf("cb_max is %d \n", cb_max);
-    printf("cr_min is %lf \n", cr_min);
-    printf("cr_max is %d \n", cr_max);
+    printf("lum_min (Y) is %d\n", lum_min);
+    printf("lum_max (Y) is %d\n", lum_max);
+    printf("cb_min (U) is %d \n", cb_min);
+    printf("cb_max (U) is %d \n", cb_max);
+    printf("cr_min (V) is %d \n", cr_min);
+    printf("cr_max (V) is %d \n", cr_max);
 
     return;
 }
