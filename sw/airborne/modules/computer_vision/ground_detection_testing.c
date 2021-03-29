@@ -45,18 +45,23 @@ double BOTTOM_LENGTH_PERCENTAGE = 0.5;
 //Length of the rectangle most to the right as percentage of image length (height)
 double TOP_LENGTH_PERCENTAGE = 0.25;
 //How far to the left the rectangles start as a percentage of image width
-double BOTTOM_WIDTH_PERCENTAGE = 0.13;
+double BOTTOM_WIDTH_PERCENTAGE = 0.05;
 //How far to the left the rectangles extend as a percentage of image width
 double TOP_WIDTH_PERCENTAGE = 0.75;
 //Width in pixels of each rectangle
 int WIDTH_RECT = 5;
 //length of each square (the squares are the rectangles in each column. They do not have to be squares)
-int LENGTH_SQUARE = 5;
+int LENGTH_SQUARE = 8;
 //Every SQUARES_CHECKEDth square is checked for greer
 int SQUARES_CHECKED = 2;
 
 
 int green_initialised = 0;
+
+double bottom_green_length_percentage = 0.25;
+double top_green_length_percentage = 0.75;
+double bottom_green_width_percentage = 0.2;
+double top_green_width_percentage = 0.4;
 
 int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column) {
     //printf("Working\n");
@@ -147,14 +152,19 @@ void init_green(struct image_t *img) {
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
-    int lum_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
-    int cb_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
-    int cr_values[(int)(0.5*img->w)*(int)(0.25*img->h)];
+    //printf("The image has %d rows and %d columns \n", img->h, img->w);
+
+    int lum_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
+    int cb_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
+    int cr_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
 
     int counter = 0;
 
-    for (uint16_t y = floor((0.25*img->h)); y < floor((0.75*img->h)); y++) {
-        for (uint16_t x = 0; x < floor((0.25*img->w)); x++) {
+    for (int y = floor((bottom_green_length_percentage * img->h)); y < floor((top_green_length_percentage * img->h)); y++) {
+        for (int x = floor((bottom_green_width_percentage * img->w)); x < floor((top_green_width_percentage * img->w)); x++){
+
+            //printf("Got here! The counter value is %d \n", counter);
+            //printf("We are at row %d and column %d \n", y, x);
 
             uint8_t *yp, *up, *vp;
             if (x % 2 == 0) {
@@ -182,6 +192,7 @@ void init_green(struct image_t *img) {
             counter++;
         }
     }
+
     int lum_sum = 0;
     float lum_mean;
     float lum_std_dev = 0.0;
@@ -214,12 +225,12 @@ void init_green(struct image_t *img) {
     cb_std_dev = sqrt(cb_std_dev/counter);
     cr_std_dev = sqrt(cr_std_dev/counter);
 
-    lum_min = (int)(lum_mean-2.5*lum_std_dev);
-    lum_max = (int)(lum_mean+2.5*lum_std_dev);
-    cb_min  = (int)(cb_mean-3.5*cb_std_dev);
-    cb_max  = (int)(cb_mean+3.5*cb_std_dev);
-    cr_min  = (int)(cr_mean-3.5*cr_std_dev);
-    cr_max  = (int)(cr_mean+3.5*cr_std_dev);
+    lum_min = (int)(floor((lum_mean-2.5*lum_std_dev)));
+    lum_max = (int)(ceil((lum_mean+2.5*lum_std_dev)));
+    cb_min  = (int)(floor((cb_mean-3.5*cb_std_dev)));
+    cb_max  = (int)(ceil((cb_mean+3.5*cb_std_dev)));
+    cr_min  = (int)(floor((cr_mean-3.5*cr_std_dev)));
+    cr_max  = (int)(ceil((cr_mean+5*cr_std_dev)));
 
     printf("lum_min (Y) is %d\n", lum_min);
     printf("lum_max (Y) is %d\n", lum_max);
@@ -233,69 +244,98 @@ void init_green(struct image_t *img) {
 
 struct image_t *get_rect(struct image_t *img){ //In this function we want to look at the amount of green pixels in a given rectangle
 
-    if ((green_initialised == 0) && (INITIALISE_GREEN == 1)){
+    if (green_initialised == 0){
+        if (INITIALISE_GREEN == 0) {
+
+            printf("Please remove all obstacles from box and then set INITIALISE_GREEN to 1\n");
+
+            uint8_t *buffer = img->buf;
+
+            for (int y = floor((bottom_green_length_percentage * img->h)); y < floor((top_green_length_percentage * img->h)); y++) {
+                for (int x = floor((bottom_green_width_percentage * img->w)); x < floor((top_green_width_percentage * img->w)); x++){
+                    uint8_t *yp, *up, *vp;
+                    if (x % 2 == 0) {
+                        // Even x
+                        up = &buffer[y * 2 * img->w + 2 * x];      // U
+                        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
+                        vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+                        //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
+                    } else {
+                        // Uneven x
+                        up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+                        //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
+                        vp = &buffer[y * 2 * img->w + 2 * x];      // V
+                        yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
+                    }
+
+                    *yp = 255;
+
+                }
+            }
+            return img;
+        }
         init_green(img);
         green_initialised = 1;
     }
 
-    int rows = img->h;
-    int columns = img->w;
+  int rows = img->h;
+  int columns = img->w;
 
 
-    //The number of rectangles which are considered. It is set so that the space
-    //up to TOP_WIDTH_PERCENTAGE is filled with non-overlapping rectangles
-    int num_rect = ceil((TOP_WIDTH_PERCENTAGE-BOTTOM_WIDTH_PERCENTAGE)*columns/WIDTH_RECT);
+  //The number of rectangles which are considered. It is set so that the space
+  //up to TOP_WIDTH_PERCENTAGE is filled with non-overlapping rectangles
+  int num_rect = ceil((TOP_WIDTH_PERCENTAGE-BOTTOM_WIDTH_PERCENTAGE)*columns/WIDTH_RECT);
 
-    //The difference in length between 2 adjacent rectangles in percentage of image length (height)
-    double rect_length_increment = (BOTTOM_LENGTH_PERCENTAGE-TOP_LENGTH_PERCENTAGE)/num_rect;
+  //The difference in length between 2 adjacent rectangles in percentage of image length (height)
+  double rect_length_increment = (BOTTOM_LENGTH_PERCENTAGE-TOP_LENGTH_PERCENTAGE)/num_rect;
 
-    //initialise only_green_in_row which will be 1 if a row has no green and 0 otherwise
-    int only_green_in_row;
+  //initialise only_green_in_row which will be 1 if a row has no green and 0 otherwise
+  int only_green_in_row;
 
-    //initialise left_or_right to 0
-    left_or_right = 0;
+  //initialise left_or_right to 0
+  left_or_right = 0;
 
-    //initialise prev_left_right:
-    int prev_left_right;
+  //initialise prev_left_right:
+  int prev_left_right;
 
-    //Go through rectangles starting from smallest (most to the right)
-    for (int rect_num = 0; rect_num < num_rect; rect_num++) {
-        //This makes sure that we can use the last checked rectangle, with an obstacle, to see if
-        //that obstacle is left or right. It contains the left_or_right score of the previous rectangle
-        prev_left_right = left_or_right;
+  //Go through rectangles starting from smallest (most to the right)
+  for (int rect_num = 0; rect_num < num_rect; rect_num++) {
+      //This makes sure that we can use the last checked rectangle, with an obstacle, to see if
+      //that obstacle is left or right. It contains the left_or_right score of the previous rectangle
+      prev_left_right = left_or_right;
 
-        left_or_right = 0; //The "score" if an obstacle is left or right is reset to 0 for each new rectangle
+      left_or_right = 0; //The "score" if an obstacle is left or right is reset to 0 for each new rectangle
 
-        //initialise only_green_in_row which will be 1 if a row has no green
-        only_green_in_row = 1;
+      //initialise only_green_in_row which will be 1 if a row has no green
+      only_green_in_row = 1;
 
-        //The length of the rectangle for this iteration pixels
-        int rect_length = floor((TOP_LENGTH_PERCENTAGE + rect_num * rect_length_increment)*rows);
+      //The length of the rectangle for this iteration pixels
+      int rect_length = floor((TOP_LENGTH_PERCENTAGE + rect_num * rect_length_increment)*rows);
 
-        //This is the number of squares in each row
-        int num_squares = ceil(rect_length/LENGTH_SQUARE);
-
-
-        for (int square_num = 0; square_num < num_squares; square_num++) {
-
-            //Coordinates of right corner
-            int right_corner_row = 0.5*(rows - rect_length) + LENGTH_SQUARE*square_num;
-            int right_corner_column = TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num;
+      //This is the number of squares in each row
+      int num_squares = ceil(rect_length/LENGTH_SQUARE);
 
 
-            if (square_num%SQUARES_CHECKED == 0){
-                //TODO: add else to add point to left right score if square comes back as not green
-                //Check if this rectangle is completely green and if so we are good to go straight ahead
+      for (int square_num = 0; square_num < num_squares; square_num++) {
 
-                if (check_for_green(img, right_corner_row, right_corner_column) == 0) {
+          //Coordinates of right corner
+          int right_corner_row = 0.5*(rows - rect_length) + LENGTH_SQUARE*square_num;
+          int right_corner_column = TOP_WIDTH_PERCENTAGE * columns - WIDTH_RECT * rect_num;
 
-                    //Since green has been detected set only_green_in_row to 0
-                    only_green_in_row = 0;
 
-                    //TODO:add more in depth weights depending on distance of square from center line
+          if (square_num%SQUARES_CHECKED == 0){
+              //TODO: add else to add point to left right score if square comes back as not green
+              //Check if this rectangle is completely green and if so we are good to go straight ahead
 
-                    /*TODO: Check if having a left_or_right variable that constantly changes has any
-                     * effect on the performance of the code and if so add a final_left_or_right variable */
+              if (check_for_green(img, right_corner_row, right_corner_column) == 0) {
+
+                  //Since green has been detected set only_green_in_row to 0
+                  only_green_in_row = 0;
+
+                  //TODO:add more in depth weights depending on distance of square from center line
+
+                  /*TODO: Check if having a left_or_right variable that constantly changes has any
+                   * effect on the performance of the code and if so add a final_left_or_right variable */
                     //if square is to the left of the center of the image subtract 1 from left_or_right
                     if (right_corner_row+0.5*LENGTH_SQUARE < 0.5*rows){
                         left_or_right--; //For objects on the left
