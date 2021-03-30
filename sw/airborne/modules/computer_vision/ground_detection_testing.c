@@ -75,9 +75,9 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
-    uint32_t tot_lum;
-    uint32_t tot_cb;
-    uint32_t tot_cr;
+    double tot_lum;
+    float tot_cb;
+    int tot_cr;
 
     //Go through the pixels in the rectangle
     for (uint16_t y = right_corner_row;y < right_corner_row + LENGTH_SQUARE; y++) {
@@ -105,8 +105,12 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
             tot_lum += *yp;
             tot_cb += *up;
             tot_cr += *vp;
+
+
         }
     }
+
+    //printf("Total values of tot_lum, tot_cb and tot_cr =: %lf, %lf, %d \n",tot_lum,tot_cb,tot_cr);
 
     //Take average of the YUV values of the box
     double avg_lum = tot_lum/(LENGTH_SQUARE*WIDTH_RECT);
