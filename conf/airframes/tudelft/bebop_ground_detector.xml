@@ -8,6 +8,7 @@
         <target name="ap" board="bebop">
             <define name="VIDEO_CAPTURE_PATH" value="/data/ftp/internal_000/images"/>
             <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000/log"/>
+            <define name="MT9V117_TARGET_FPS" value="20"/>
 
             <!-- Detect green -->
             <define name="GROUND_DETECTOR_LUM_MIN" value="118"/>
