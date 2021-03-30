@@ -101,42 +101,19 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
                 yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
             }
 
+            //Add pixels YUV values to their respective totals
             tot_lum += *yp;
             tot_cb += *up;
             tot_cr += *vp;
         }
     }
 
-    //printf("tot_v is %lf",tot_cr);
-
+    //Take average of the YUV values of the box
     double avg_lum = tot_lum/(LENGTH_SQUARE*WIDTH_RECT);
     double avg_cb = tot_cb/(LENGTH_SQUARE*WIDTH_RECT);
     double avg_cr = tot_cr/(LENGTH_SQUARE*WIDTH_RECT);
 
-    //printf("average y, u and v values are: %lf, %lf, %lf\n", avg_lum, avg_cb, avg_cr);
-
-    /*for (uint16_t y = floor((0.25*img->h)); y < floor((0.75*img->h)); y++) {
-        for (uint16_t x = 0; x < floor((0.25 * img->w)); x++) {
-            uint8_t *yp, *up, *vp;
-            if (x % 2 == 0) {
-                // Even x
-                up = &buffer[y * 2 * img->w + 2 * x];      // U
-                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
-                vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
-                //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
-            } else {
-                // Uneven x
-                up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
-                //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
-                vp = &buffer[y * 2 * img->w + 2 * x];      // V
-                yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
-            }
-
-            *yp = 255;
-
-        }
-    }*/
-
+    //If this average is outside the bounds make the pixel lighter and return 0
     if (!((avg_lum >= lum_min) && (avg_lum <= lum_max) &&
         (avg_cb >= cb_min) && (avg_cb <= cb_max) &&
         (avg_cr>= cr_min) && (avg_cr <= cr_max)) ){
@@ -146,31 +123,28 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
         *yp = 255;  // make pixel brighter in image
         return 0;
     }
-    /*else{
-        *yp = 255;  // make pixel brighter in image
-    }
-    */
+    //If the square is within bounds return 1
     return 1;
 
 }
 
 void init_green(struct image_t *img) {
+    //This function is to initialise the colour filter upper and lower bounds irrespective of lighting conditions
+
+
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
-    //printf("The image has %d rows and %d columns \n", img->h, img->w);
-
+    //create arrays of integers that will contain the YUV values of all pixels considered
     int lum_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
     int cb_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
     int cr_values[(int)((top_green_length_percentage-bottom_green_length_percentage)*img->w)*(int)((top_green_width_percentage-bottom_green_width_percentage)*img->h)];
 
     int counter = 0;
 
+    //Iterate through only the area that should have been cleared of obstacles
     for (int y = floor((bottom_green_length_percentage * img->h)); y < floor((top_green_length_percentage * img->h)); y++) {
         for (int x = floor((bottom_green_width_percentage * img->w)); x < floor((top_green_width_percentage * img->w)); x++){
-
-            //printf("Got here! The counter value is %d \n", counter);
-            //printf("We are at row %d and column %d \n", y, x);
 
             uint8_t *yp, *up, *vp;
             if (x % 2 == 0) {
@@ -191,14 +165,11 @@ void init_green(struct image_t *img) {
             cb_values[counter] = *up;
             cr_values[counter] = *vp;
 
-            //printf("new value added to lum_values is %d \n", lum_values[counter]);
-            //printf("new value added to cb_values is %d \n", cb_values[counter]);
-            //printf("new value added to cr_values is %d \n", cr_values[counter]);
-
             counter++;
         }
     }
 
+    //initialise variables for the sum, mean and standard deviation of all the detected YUV values
     int lum_sum = 0;
     float lum_mean;
     float lum_std_dev = 0.0;
@@ -211,26 +182,32 @@ void init_green(struct image_t *img) {
     float cr_mean;
     float cr_std_dev = 0.0;
 
+    //sum all values in each array to get the sum
     for (int i = 0; i<counter; i++){
         lum_sum += lum_values[i];
         cb_sum += cb_values[i];
         cr_sum += cr_values[i];
     }
 
+    //the mean is the sum divided by the number of items in each array
     lum_mean = lum_sum/counter;
     cb_mean = cb_sum/counter;
     cr_mean = cr_sum/counter;
 
+    //Find difference of each point in array with the mean and square this
     for (int i = 0; i<counter; i++){
         lum_std_dev += pow(lum_values[i]-lum_mean,2);
         cb_std_dev += pow(cb_values[i]-cb_mean,2);
         cr_std_dev += pow(cr_values[i]-cr_mean,2);
     }
 
+    //take the square root of the average difference as the standard deviation
     lum_std_dev = sqrt(lum_std_dev/counter);
     cb_std_dev = sqrt(cb_std_dev/counter);
     cr_std_dev = sqrt(cr_std_dev/counter);
 
+    //define the upper and lower bounds based on the mean, standard deviation and coefficients found experimentally
+    //for each bound
     lum_min = (int)(floor((lum_mean-lum_min_coeff*lum_std_dev)));
     lum_max = (int)(ceil((lum_mean+lum_max_coeff*lum_std_dev)));
     cb_min  = (int)(floor((cb_mean-cb_min_coeff*cb_std_dev)));
@@ -238,6 +215,7 @@ void init_green(struct image_t *img) {
     cr_min  = (int)(floor((cr_mean-cr_min_coeff*cr_std_dev)));
     cr_max  = (int)(ceil((cr_mean+cr_max_coeff*cr_std_dev)));
 
+    //print upper and lower bounds
     printf("lum_min (Y) is %d\n", lum_min);
     printf("lum_max (Y) is %d\n", lum_max);
     printf("cb_min (U) is %d \n", cb_min);
@@ -250,30 +228,34 @@ void init_green(struct image_t *img) {
 
 struct image_t *get_rect(struct image_t *img){ //In this function we want to look at the amount of green pixels in a given rectangle
 
+    //If the green filter hasn't been initialised yet green_initialised will be 0
     if (green_initialised == 0){
+        //INITIALISE_GREEN will be 0 till the setting has been manually changed which should only be done once the area shown in the
+        //rectangle on the green is completely clear of obstacles and only contains grass pixels
         if (INITIALISE_GREEN == 0) {
 
             printf("Please make sure area highlighted in drone video stream is \n ONLY the grass of the CyberZoo and then set INITIALISE_GREEN to 1\n");
 
             uint8_t *buffer = img->buf;
 
+            //Draw rec
             for (int y = floor((bottom_green_length_percentage * img->h)); y < floor((top_green_length_percentage * img->h)); y++) {
                 for (int x = floor((bottom_green_width_percentage * img->w)); x < floor((top_green_width_percentage * img->w)); x++){
                     uint8_t *yp, *up, *vp;
                     if (x % 2 == 0) {
                         // Even x
-                        up = &buffer[y * 2 * img->w + 2 * x];      // U
+                        //up = &buffer[y * 2 * img->w + 2 * x];      // U
                         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y1
-                        vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
+                        //vp = &buffer[y * 2 * img->w + 2 * x + 2];  // V
                         //yp = &buffer[y * 2 * img->w + 2 * x + 3]; // Y2
                     } else {
                         // Uneven x
-                        up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
+                        //up = &buffer[y * 2 * img->w + 2 * x - 2];  // U
                         //yp = &buffer[y * 2 * img->w + 2 * x - 1]; // Y1
-                        vp = &buffer[y * 2 * img->w + 2 * x];      // V
+                        //vp = &buffer[y * 2 * img->w + 2 * x];      // V
                         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
                     }
-
+                    //make the rectangle lighter on video stream
                     *yp = 255;
 
                 }
@@ -282,6 +264,7 @@ struct image_t *get_rect(struct image_t *img){ //In this function we want to loo
         }
         init_green(img);
         green_initialised = 1;
+        printf("Green has been initialised!\n");
     }
 
   int rows = img->h;
