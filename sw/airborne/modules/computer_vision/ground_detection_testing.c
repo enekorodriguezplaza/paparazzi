@@ -70,11 +70,11 @@ float cr_min_coeff  = 3.5;
 float cr_max_coeff = 3.5;
 
 int check_for_green(struct image_t *img, int right_corner_row, int right_corner_column) {
-    //printf("Working\n");
 
     //pointer to buffer where image is stored
     uint8_t *buffer = img->buf;
 
+    //These variables are all different due to memory issues on ubuntu 18.04
     double tot_lum;
     float tot_cb;
     int tot_cr;
@@ -110,16 +110,11 @@ int check_for_green(struct image_t *img, int right_corner_row, int right_corner_
         }
     }
 
-    //printf("Total values of tot_lum, tot_cb and tot_cr =: %lf, %lf, %d \n",tot_lum,tot_cb,tot_cr);
 
     //Take average of the YUV values of the box
     double avg_lum = tot_lum/(LENGTH_SQUARE*WIDTH_RECT);
     double avg_cb = tot_cb/(LENGTH_SQUARE*WIDTH_RECT);
     double avg_cr = tot_cr/(LENGTH_SQUARE*WIDTH_RECT);
-
-    //printf("The average Y value is %lf \n", avg_lum);
-    //printf("The average U value is %lf \n", avg_cb);
-    //printf("The average V value is %lf \n", avg_cr);
 
     //If this average is outside the bounds make the pixel lighter and return 0
     if (!((avg_lum >= lum_min) && (avg_lum <= lum_max) &&
