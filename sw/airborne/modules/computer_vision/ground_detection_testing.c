@@ -17,7 +17,7 @@
 #define FPS_WIDTH 0
 #endif
 
-//Trying to push to a new branch
+//Trying to push to a new branch.
 
 //These are initialised as zero but using the image_width_printer_init they are changed to the
 //proper settings for a green filter
