@@ -42,10 +42,10 @@ enum navigation_state_t {
 // Declare variables used in the periodic function. All of these can be found on the Settings. These determine the navigation behaviour
 float GD_MAX_SPEED = 0.6f;               // max flight speed [m/s], taken from Orange Avoider Guided
 float GD_HEADING_RATE = RadOfDeg(27.f);  // heading rate [rad/s] at which the bebop turns upon encountering obstacle
-float GD_SLOW_FACTOR_FOUND = 0.7f;       //Factor for reduction of velocity when encountering obstacle
-float GD_SLOW_FACTOR_SEARCH = 0.7f;      //Factor for reduction of velocity when searching a new heading
-float CONFIDENCE_FACTOR = 7.0f;          // Factor to be multiplied with confidence_level to yeild a new velocity.
-int RIGHT_THRESHOLD = 3;                 // threshold of left_or_right value to turn right. A bias is added so that it usually turns right when getting out of the cyberzoo
+float GD_SLOW_FACTOR_FOUND = 0.45f;       //Factor for reduction of velocity when encountering obstacle
+float GD_SLOW_FACTOR_SEARCH = 0.45f;      //Factor for reduction of velocity when searching a new heading
+float CONFIDENCE_FACTOR = 5.0f;          // Factor to be multiplied with confidence_level to yeild a new velocity.
+int RIGHT_THRESHOLD = 4;                 // threshold of left_or_right value to turn right. A bias is added so that it usually turns right when getting out of the cyberzoo
 
 // Define and initialise global variables
 enum navigation_state_t navigation_state = SAFE;   // current state in state machine
